@@ -15,10 +15,12 @@ RUN echo server.network-backend = \"writev\" >> /etc/lighttpd/lighttpd.conf
 
 COPY etc/lighttpd/* /etc/lighttpd/
 COPY start.sh /usr/local/bin/
+COPY invitation.sh /var/www/
 
 EXPOSE 80
 
 VOLUME /var/www/localhost
 VOLUME /etc/lighttpd
+VOLUME /invites
 
 CMD ["start.sh"]
