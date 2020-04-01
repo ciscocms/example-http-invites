@@ -1,82 +1,40 @@
-# lighttpd Docker image
+# Example HTTP server to use with CMS for custom email templates
 
-Security, speed, compliance, and flexibility -- all of these describe [lighttpd](http://www.lighttpd.net/)
+This is a simple example of an HTTP server that can be used to serve custom email templates to a Cisco Meeting Server that uses call branding profiles invitationTemplate option.
 
-### Contents
+This repository is a fork of [spujadas/lighttpd-docker](https://github.com/spujadas/lighttpd-docker) created by [Sébastien Pujadas](http://pujadas.net).
 
- - Usage
-	 - Start a container with Docker
-	 - Start a container with Docker Compose
- - Build
-	 - Build with Docker
-	 - Build with Docker Compose
-	 - Build with Docker Buildx
- - About
+## Simple Usage
 
-## Usage
+	# Build container from this repository
+	docker build github.com/ciscocms/lighttpd-docker -t example-http-invites
 
-In the instructions that follow, replace:
+	# Run HTTP server in port 9999 mapping current folder for custom email template files
+	docker run -d -t -v $(pwd):/invites -p 9999:80 example-http-invites
 
-- `<home-directory>` with the path of the local directory you want to serve content from.
+	# Create Spanish from Spain template
+	echo Ejemplo > invitation_template_es_ES.txt
 
-- `<config-directory>` with the path of the local directory containing lighttpd configuration files that you want to use instead of the default ones.
+	# Server side script parses query string to work out which file content to return
+	curl 'http://localhost:9999/invitation.sh?language=es_ES'
+	Ejemplo
 
-	To make it easier to create custom configuration files, the default configuration files are included in the `etc/lighttpd` directory of the Git repository.
- 
--  `<http-port>` with the HTTP port you want the HTTP server to serve content to (e.g. `80` for the standard HTTP port if not already in use on the host).
+	# If not found and not default invitation_template.txt is provided it should return 404
+	curl 'http://localhost:9999/invitation.sh?language=es_MX'
+	Status: 404 (Not Found)
 
-### Start a container with Docker
+	# Create default generic invite that will be used for any unknown requested languages
+	echo Generic Invite > invitation_template.txt
+	curl 'http://localhost:9999/invitation.sh?language=es_MX'
+	Generic Invite
 
-With the default configuration files:
+## How it works
 
-	$ sudo docker run --rm -t -v <home-directory>:/var/www/localhost/htdocs -p <http-port>:80 sebp/lighttpd
+It runs a shell CGI script in the server side that processes the query string ?language=xx_XX and checks if the appropriate invitation_template file exists in /invites folder.
 
-With custom configuration files:
+You can check and modify this script easily by forking this repository and modify [invitation.sh](/invitation.sh).
 
-	$ sudo docker run --rm -t -v <home-directory>:/var/www/localhost/htdocs -v <config-directory>:/etc/lighttpd -p <http-port>:80 sebp/lighttpd
+For more details on how to use the docker image check the original repository: [spujadas/lighttpd-docker](https://github.com/spujadas/lighttpd-docker)
 
-### Start a container with Docker Compose
+For more information about Cisco Meeting Server check release notes and guides [here](https://www.cisco.com/c/en/us/support/conferencing/meeting-server/products-release-notes-list.html).
 
-Add the following lines in an existing or a new `docker-compose.yml` file:
-
-	lighttpd:
-	  image: sebp/lighttpd
-	  volumes:
-	    - <home-directory>:/var/www/localhost/htdocs
-	    - <config-directory>:/etc/lighttpd
-	  ports:
-	    - "<http-port>:80"
-	  tty: true
-
-**Note** – The `- <config-directory>:…` line is optional, it can be used to override the default configuration files with your own.
-
-Then start a lighttpd container with:
-
-	$ sudo docker-compose up lighttpd
-
-
-## Build
-
-First clone or download the [spujadas/lighttpd-docker](https://github.com/spujadas/lighttpd-docker) GitHub repository, open a shell in the newly created `lighttpd-docker` directory, then build the image and run a container using Docker, Docker Compose, or Docker Buildx, as explained below.
-
-### Build with Docker
-
-This command will build the image:
-
-	$ sudo docker build .
-
-### Build with Docker Compose
-
-Build the image with this command:
-
-	$ sudo docker-compose build
-
-### Build with Docker Buildx
-
-Build the image with this command:
-
-	$ sudo buildx build .
-
-## About
-
-Written by [Sébastien Pujadas](http://pujadas.net), released under the [MIT license](http://opensource.org/licenses/MIT).
