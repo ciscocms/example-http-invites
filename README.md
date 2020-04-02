@@ -7,7 +7,7 @@ This repository is a fork of [spujadas/lighttpd-docker](https://github.com/spuja
 ## Simple Usage
 
 	# Build container from this repository
-	docker build github.com/ciscocms/lighttpd-docker -t example-http-invites
+	docker build github.com/ciscocms/example-http-invites -t example-http-invites
 
 	# Run HTTP server in port 9999 mapping current folder for custom email template files
 	docker run -d -t -v $(pwd):/invites -p 9999:80 example-http-invites
